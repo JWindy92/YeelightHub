@@ -4,8 +4,6 @@ from yeelight import Bulb, discover_bulbs
 import json
 from pprint import pprint
 
-bulbs = []
-
 class YeelightBulb:
 
     def __init__(self, ip):
@@ -27,36 +25,28 @@ class YeelightBulb:
     def on(self):
         self.bulb.turn_on()
 
+    def toggle(self):
+        self.bulb.toggle()
+
     def handle_command(self, data):
-        if self.get_status()['power'] != data['state']['power']:
-            self.bulb.toggle()
+        if data['power']:
+            print(data['power'])
+            if data['power'] == "on":
+                print("Turning on")
+                self.on()
+            elif data['power'] == "off":
+                print("Turning off")
+                self.off()
+            else:
+                print("Invalid power value: ", data['power'])
         
 
-# TODO: May be able to use built in discovery service rather than pulling from mongo, but this may be more reliable/faster
-mongoClient = pymongo.MongoClient("mongodb://10.0.0.52:27018/")
-db = mongoClient["SmartHomeDB"]
-devices = db["DEVICES"]
-
-yeelights = devices.find({"type": "Yeelight"})
-for doc in yeelights:
-    print("Found a bulb")
-    bulb = YeelightBulb(doc['addr'])
-    bulbs.append(bulb)
-
-def get_bulb_by_ip(addr):
-    for bulb in bulbs:
-        if addr == bulb.ip:
-            return bulb
-
-def discover():
-    print("Looking for bulbs")
-    bulbs = discover_bulbs(timeout=30)
-    return bulbs
 
 def send_command(data):
     try:
-        bulb = get_bulb_by_ip(data['addr'])
-        bulb.handle_command(data)
+        print(data)
+        bulb = YeelightBulb(data['ip_addr'])
+        bulb.handle_command(data['cmd'])
     except:
         print("Something went wrong")
 

@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM arm64v8/ubuntu:latest
 
 LABEL maintainer="johnwid92@gmail.com"
 

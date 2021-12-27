@@ -4,6 +4,9 @@ from yeelight import Bulb, discover_bulbs
 import json
 from pprint import pprint
 
+# TODO: look into start_music, it may be a way to remove the rate-limiting to 
+# allow 100s of updates in a few seconds. (Sliding dimmer/live update color/etc.)
+
 class YeelightBulb:
 
     def __init__(self, ip):
@@ -28,9 +31,11 @@ class YeelightBulb:
     def toggle(self):
         self.bulb.toggle()
 
+    # TODO: values should be validated
+    # temperature: 1700-6500
+    # brightness: 1-100
     def handle_command(self, data):
-        if data['power']:
-            print(data['power'])
+        if "power" in data:
             if data['power'] == "on":
                 print("Turning on")
                 self.on()
@@ -39,12 +44,17 @@ class YeelightBulb:
                 self.off()
             else:
                 print("Invalid power value: ", data['power'])
-        
+        if "temperature" in data:
+            self.bulb.set_color_temp(int(data["temperature"]))
+        if "color" in data:
+            red, green, blue = map(int, data['color'].split(","))
+            self.bulb.set_rgb(red, green, blue, light_type=0)
+        if "brightness" in data:
+            self.bulb.set_brightness(int(data["brightness"]))
 
 
 def send_command(data):
     try:
-        print(data)
         bulb = YeelightBulb(data['ip_addr'])
         bulb.handle_command(data['cmd'])
     except:
